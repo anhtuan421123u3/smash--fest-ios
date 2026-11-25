@@ -34,7 +34,6 @@ import platform.UIKit.UILabel
 import platform.UIKit.UITouch
 import platform.UIKit.UIView
 import platform.UIKit.UIViewController
-import platform.UIKit.locationInView
 
 @OptIn(ExperimentalForeignApi::class)
 private class AimOverlayView(
