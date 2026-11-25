@@ -40,6 +40,9 @@ class AppDelegate @ObjCObjectBase.OverrideInit constructor() : UIResponder(), UI
 }
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
+fun createSmashFestViewController(): platform.UIKit.UIViewController = SmashFestViewController()
+
+@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 fun main() {
     autoreleasepool {
         UIApplicationMain(0, null, null, NSStringFromClass(AppDelegate))

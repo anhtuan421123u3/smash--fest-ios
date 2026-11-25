@@ -1,5 +1,6 @@
 .gradle/
 build/
+iosApp/build/
 .kotlin/
 .vscode/
 *.ipa

@@ -1,0 +1,64 @@
+name: SmashFest
+options:
+  bundleIdPrefix: com.flowgames.smashfest
+  deploymentTarget:
+    iOS: "15.0"
+  generateEmptyDirectories: false
+
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    IPHONEOS_DEPLOYMENT_TARGET: "15.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+
+targets:
+  SmashFest:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: SmashFest
+      - path: Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flowgames.smashfest.ios
+        PRODUCT_NAME: SmashFest
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        INFOPLIST_FILE: Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SKIP_INSTALL: NO
+        FRAMEWORK_SEARCH_PATHS:
+          - "$(inherited)"
+          - "$(PROJECT_DIR)/../build/bin/iosArm64/releaseFramework"
+          - "$(PROJECT_DIR)/../build/bin/iosArm64/debugFramework"
+          - "$(PROJECT_DIR)/../build/bin/iosSimulatorArm64/debugFramework"
+        OTHER_LDFLAGS:
+          - "$(inherited)"
+          - "-framework"
+          - "SmashFestKit"
+          - "-framework"
+          - "UIKit"
+          - "-framework"
+          - "SceneKit"
+          - "-framework"
+          - "Foundation"
+          - "-framework"
+          - "CoreGraphics"
+          - "-framework"
+          - "QuartzCore"
+          - "-framework"
+          - "AVFAudio"
+          - "-framework"
+          - "AudioToolbox"
+          - "-lc++"
+
+schemes:
+  SmashFest:
+    build:
+      targets:
+        SmashFest: all
+    archive:
+      config: Release

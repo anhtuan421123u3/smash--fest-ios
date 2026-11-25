@@ -10,18 +10,18 @@ kotlin {
 
     iosArm64 {
         binaries {
-            executable {
-                entryPoint = "com.smashfest.ios.main"
-                baseName = "SmashFest"
-                freeCompilerArgs += listOf(
-                    "-linker-option", "-framework", "-linker-option", "UIKit",
-                    "-linker-option", "-framework", "-linker-option", "SceneKit",
-                    "-linker-option", "-framework", "-linker-option", "Foundation",
-                    "-linker-option", "-framework", "-linker-option", "CoreGraphics",
-                    "-linker-option", "-framework", "-linker-option", "QuartzCore",
-                    "-linker-option", "-framework", "-linker-option", "AVFAudio",
-                    "-linker-option", "-framework", "-linker-option", "AudioToolbox"
-                )
+            framework {
+                baseName = "SmashFestKit"
+                isStatic = true
+            }
+        }
+    }
+
+    iosSimulatorArm64 {
+        binaries {
+            framework {
+                baseName = "SmashFestKit"
+                isStatic = true
             }
         }
     }
@@ -39,6 +39,9 @@ kotlin {
             dependsOn(commonMain)
         }
         val iosArm64Main by getting {
+            dependsOn(iosMain)
+        }
+        val iosSimulatorArm64Main by getting {
             dependsOn(iosMain)
         }
     }

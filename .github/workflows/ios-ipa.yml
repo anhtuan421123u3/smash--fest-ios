@@ -16,8 +16,8 @@ permissions:
 
 jobs:
   build-ios-ipa:
-    name: Pure Kotlin/Native iOS -> Unsigned .ipa
-    runs-on: macos-latest
+    name: Kotlin/Native + Xcode -> Unsigned .ipa
+    runs-on: macos-15
     timeout-minutes: 35
 
     steps:
@@ -38,11 +38,56 @@ jobs:
       - name: Run Core Gameplay & Economy Unit Tests (JVM)
         run: gradle jvmTest --no-daemon --stacktrace
 
-      - name: Compile Pure Kotlin/Native iOS ARM64 Executable
-        run: gradle linkReleaseExecutableIosArm64 --no-daemon --stacktrace
+      - name: Build Kotlin/Native iOS Release Framework (iosArm64)
+        run: gradle linkReleaseFrameworkIosArm64 --no-daemon --stacktrace
 
-      - name: Package & Verify Unsigned SmashFest.ipa
-        run: bash scripts/package_ipa.sh
+      - name: Generate AppIcon Assets
+        run: python3 scripts/generate_icons.py iosApp/Assets.xcassets/AppIcon.appiconset
+
+      - name: Ensure XcodeGen & Generate Xcode Project
+        run: |
+          if [ -d "/Applications/Xcode.app/Contents/Developer" ]; then
+            sudo xcode-select -s "/Applications/Xcode.app/Contents/Developer"
+          fi
+          xcodebuild -version
+          if ! command -v xcodegen >/dev/null 2>&1; then
+            brew install xcodegen
+          fi
+          (cd iosApp && xcodegen generate)
+
+      - name: Archive iOS App via Xcode (Release, Unsigned)
+        working-directory: iosApp
+        run: |
+          set -o pipefail
+          mkdir -p build
+          xcodebuild clean archive \
+            -project SmashFest.xcodeproj \
+            -scheme SmashFest \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination "generic/platform=iOS" \
+            -archivePath build/SmashFest.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_ENTITLEMENTS="" \
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            2>&1 | tee build/xcodebuild.log
+
+      - name: Package & Ad-Hoc Sign Unsigned SmashFest.ipa
+        run: |
+          APP_PATH="iosApp/build/SmashFest.xcarchive/Products/Applications/SmashFest.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "::error::SmashFest.app not found at $APP_PATH"
+            exit 1
+          fi
+          rm -rf build/ipa SmashFest-unsigned.ipa
+          mkdir -p build/ipa/Payload
+          cp -R "$APP_PATH" build/ipa/Payload/SmashFest.app
+          codesign --force --deep --sign - --timestamp=none build/ipa/Payload/SmashFest.app
+          (cd build/ipa && zip -qry ../../SmashFest-unsigned.ipa Payload)
+          ls -lh SmashFest-unsigned.ipa
+          file build/ipa/Payload/SmashFest.app/SmashFest
 
       - name: Upload Downloadable .ipa Artifact
         uses: actions/upload-artifact@v4
@@ -57,11 +102,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.${{ github.run_number }}
-          name: "Smash Fest! iOS Build #${{ github.run_number }} (Pure Kotlin/Native .ipa)"
+          name: "Smash Fest! iOS Build #${{ github.run_number }} (Xcode .ipa)"
           body: |
-            ### Smash Fest! — Native iOS Build (100% Pure Kotlin/Native)
+            ### Smash Fest! — Native iOS Build (Kotlin/Native + Xcode)
             - **Minimum iOS/iPadOS:** 15.0+ (Universal iPhone & iPad)
             - **Package:** `SmashFest-unsigned.ipa` (Ad-hoc signed for Sideloadly / AltStore / TrollStore / ESign)
-            - **Features:** 3D SceneKit Aim–Shoot–Smash physics, Chain of Destruction shards, ASMR synthesized audio, 2,000+ levels (Normal/Hard/Super Hard), 5-Lives 30-min regeneration, Carnival Champions Cup, and Offline Mode.
           files: SmashFest-unsigned.ipa
           prerelease: false
